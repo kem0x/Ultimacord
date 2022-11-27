@@ -28,7 +28,7 @@ async function InitPatcher() {
     for (const plugin of plugins) {
 
         if (plugin.name) {
-            print("log", "Loading plugin", plugin.name);
+            // print("log", "Loading plugin", plugin.name);
 
             if (plugin.exposes) {
                 expose(plugin.name, plugin.exposes);
@@ -37,7 +37,7 @@ async function InitPatcher() {
             if (plugin.patches) {
                 for (const patch of plugin.patches) {
 
-                    print("log", "Loading patch", patch.name ? patch.name : patch.moduleFlag);
+                    // print("log", "Loading patch", patch.name ? patch.name : patch.moduleFlag);
                     patches.add(patch);
                 }
             }
@@ -60,7 +60,7 @@ async function InitPatcher() {
 
                 if (moduleCode.includes(patch.moduleFlag)) {
 
-                    print("info", "Found module [", ID, "] with flag [", patch.moduleFlag, "]");
+                    // print("info", "Found module [", ID, "] with flag [", patch.moduleFlag, "]");
 
                     if (patch.regex.test(moduleCode)) {
 

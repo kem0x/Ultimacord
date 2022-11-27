@@ -9,7 +9,7 @@ export class quickMention {
         name: 'quickMention',
         patches: [
             {
-                name: "serverListDecorators",
+                name: "messageActions",
                 moduleFlag: "Messages.MESSAGE_UTILITIES_A11Y_LABEL",
                 regex: /(null,)(.{1,3}&&!.{1,3}\?(.{1,3})\(\{key:"reply",label:.{1,10}\.Messages\.MESSAGE_ACTION_REPLY,icon:.{1,10},channel:(.+?),message:(.+?),onClick:.+?\}\))/,
                 replacement: (_m: any, post: any, og: any, functionName: any, channelVar: any, messageVar: any) => {
