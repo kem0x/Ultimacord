@@ -1,10 +1,9 @@
 import { print, waitFor } from './utils';
 
 import { Window, expose, Find, getExposed } from './webpack';
+import { plugins } from './plugins';
 
-import * as compiledPlugins from "./plugins/dist/plugins";
-
-import { InitCommon } from "./common";
+import * as compiledPlugins from "./plugins/dist/compiledPlugins";
 
 export interface IPatch {
     name?: string;
@@ -12,25 +11,12 @@ export interface IPatch {
     regex: RegExp;
     replacement: string | Function;
 }
-const patches: Set<IPatch> = new Set();
+export const patches: Set<IPatch> = new Set();
 
-export interface IPlugin {
-    name: string;
-    patches?: IPatch[];
-    exposes?: { [key: string]: any };
-    start?: () => void;
-    stop?: () => void;
-}
-const plugins: Set<IPlugin> = new Set();
-
-expose('plugins', plugins);
-
-async function InitCore() {
+async function InitPatcher() {
     print("info", 'Patcher initialized');
 
     expose("originalWebpackChunkdiscordAppPush", Window.webpackChunkdiscord_app.push);
-
-    InitCommon();
 
     for (const plugin of compiledPlugins.default) {
         const pluginsImport = `data:text/javascript;charset=utf-8,${encodeURIComponent(plugin)}`;
@@ -39,17 +25,19 @@ async function InitCore() {
 
     for (const plugin of plugins) {
 
-        print("log", "Loading plugin", plugin.name);
+        if (plugin.name) {
+            print("log", "Loading plugin", plugin.name);
 
-        if (plugin.exposes) {
-            expose(plugin.name, plugin.exposes);
-        }
+            if (plugin.exposes) {
+                expose(plugin.name, plugin.exposes);
+            }
 
-        if (plugin.patches) {
-            for (const patch of plugin.patches) {
+            if (plugin.patches) {
+                for (const patch of plugin.patches) {
 
-                print("log", "Loading patch", patch.name ? patch.name : patch.moduleFlag);
-                patches.add(patch);
+                    print("log", "Loading patch", patch.name ? patch.name : patch.moduleFlag);
+                    patches.add(patch);
+                }
             }
         }
 
@@ -97,16 +85,11 @@ async function InitCore() {
     }
 }
 
-import type Components from "discord-types/components";
-
-export let Tooltip: Components.Tooltip = null as any;
-
-
 export function UltimateDiscordExperience() {
     waitFor(() => Window?.webpackChunkdiscord_app?.push).then(async () => {
         print("info", "Webpack is loaded starting patcher");
 
-        await InitCore();
+        await InitPatcher();
 
         expose('findByProps', Find.ByProps);
         expose('findByCode', Find.ByCode);

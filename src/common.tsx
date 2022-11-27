@@ -1,16 +1,13 @@
-import { print, Lazy, waitFor } from './utils';
-import { Find } from "./webpack";
+import { Lazy } from './utils';
+import { Find } from './webpack';
 import type Components from "discord-types/components";
 
-export let Tooltip: Components.Tooltip = null as any;
+export const Common =
+{
+    get Tooltip() { return (Find.ByProps("Positions", "Colors") as Components.Tooltip); },
+}
 
-export const PresenceStore = Lazy(() => Find.ByProps("setCurrentUserOnConnectionOpen"));
-
-export async function InitCommon() {
-    await waitFor(() => Find.ByProps("Positions", "Colors") !== null);
-    Tooltip = Find.ByProps("Positions", "Colors");
-
-    print("info", Tooltip.toString());
-
-    print("info", "Commons initialized!");
+export const Stores =
+{
+    get PresenceStore() { return Lazy(() => Find.ByProps("setCurrentUserOnConnectionOpen"))(); },
 }

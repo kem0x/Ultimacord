@@ -1,0 +1,13 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build and import",
+            "type": "shell",
+            "command": "pnpm dev",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        }
+    ]
+}

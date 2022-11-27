@@ -1,7 +1,7 @@
 export type LogType = "log" | "warn" | "error" | "debug" | "info";
 
 export function print(type: LogType, ...args: string[]) {
-    console[type](`%c ultimacord `, `background: #5865f2; color: black; font-weight: bold; border-radius: 5px; `, ...args);
+    console[type](`%c Ultimacord `, `background: #5865f2; color: black; font-weight: bold; border-radius: 5px; `, ...args);
 }
 
 export function sleep(ms: number): Promise<void> {

@@ -19,6 +19,7 @@
     "vite-plugin-monkey": "^2.9.3"
   },
   "dependencies": {
+    "dotenv": "^16.0.3",
     "react": "^18.2.0"
   }
 }

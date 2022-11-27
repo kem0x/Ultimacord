@@ -1,20 +1,27 @@
 import React from 'react';
 
-import { Lazy, print } from '../utils';
-import { IPlugin } from '../ultimacordCore';
-import { Find, getExposed } from '../webpack';
-import { PresenceStore, Tooltip } from '../common';
+import { Lazy } from '../utils';
+import { Find } from '../webpack';
+import { Stores, Common } from '../common';
+import * as plugins from '../plugins';
 
 function Icon(path: string, viewBox = "0 0 24 24") {
-    return ({ color }: { color: string; }) => (
-        <svg
-            height="18"
-            width="18"
-            viewBox={viewBox}
-            fill={color}
-        >
-            <path d={path} />
-        </svg>)
+    return ({ color, tooltip }: { color: string; tooltip: string; }) => (
+        <Common.Tooltip text={tooltip} >
+            {(tooltipProps: any) => (
+                <svg
+                    {...tooltipProps}
+                    height="18"
+                    width="18"
+                    viewBox={viewBox}
+                    fill={color}
+                >
+                    <path d={path} />
+                </svg>
+            )}
+        </Common.Tooltip>
+    );
+
 }
 
 const Icons = {
@@ -28,18 +35,18 @@ type Platform = keyof typeof Icons;
 const getStatusColor = Lazy(() => Find.ByCode("STATUS_YELLOW", "TWITCH", "STATUS_GREY"));
 
 const PlatformIcon = ({ platform, status }: { platform: Platform, status: string; }) => {
-    // const tooltip = platform[0].toUpperCase() + platform.slice(1);
+    const tooltip = platform[0].toUpperCase() + platform.slice(1);
     const Icon = Icons[platform] ?? Icons.desktop;
 
-    return <Icon color={`var(--${getStatusColor()(status)}`} />;
+    return <Icon color={`var(--${getStatusColor()(status)}`} tooltip={tooltip} />;
 };
 
 const PlatformIndicator = ({ user }: { user: any; }) => {
+    if (!Common.Tooltip) return null;
+
     if (!user || user.bot) return null;
 
-    console.log(Tooltip);
-
-    const status = PresenceStore().getState()?.clientStatuses?.[user.id] as Record<Platform, string>;
+    const status = Stores.PresenceStore.getState()?.clientStatuses?.[user.id] as Record<Platform, string>;
     if (!status) return null;
 
     const icons = Object.entries(status).map(([platform, status]) => (
@@ -64,34 +71,35 @@ const PlatformIndicator = ({ user }: { user: any; }) => {
     );
 };
 
-const Plugin: IPlugin = {
-    name: 'platformIcons',
-    patches: [
-        {
-            name: "serverListDecorators",
-            moduleFlag: "this.renderPremium()",
-            regex: /this.renderPremium\(\)[^\]]*?\]/,
-            replacement: "$&.concat(ultimacord.platformIcons.render(this.props))"
-        },
-        {
-            name: "DMListDecorators",
-            moduleFlag: "PrivateChannel.renderAvatar",
-            regex: /(subText:(.{1,3})\..+?decorators:)(.+?:null)/,
-            replacement: "$1[$3].concat(ultimacord.platformIcons.render($2.props))"
-        },
-        {
-            name: "UserBadges",
-            moduleFlag: "Messages.PROFILE_USER_BADGES",
-            regex: /(Messages\.PROFILE_USER_BADGES,role:"group",children:)(.+?\.key\)\}\)\))/,
-            replacement: "$1[ultimacord.platformIcons.render(e)].concat($2)"
+
+export class platformIcons {
+    @plugins.definePlugin
+    static Plugin: plugins.IPlugin = {
+        name: 'platformIcons',
+        patches: [
+            {
+                name: "serverListDecorators",
+                moduleFlag: "this.renderPremium()",
+                regex: /this.renderPremium\(\)[^\]]*?\]/,
+                replacement: "$&.concat(ultimacord.platformIcons.render(this.props))"
+            },
+            {
+                name: "DMListDecorators",
+                moduleFlag: "PrivateChannel.renderAvatar",
+                regex: /(subText:(.{1,3})\..+?decorators:)(.+?:null)/,
+                replacement: "$1[$3].concat(ultimacord.platformIcons.render($2.props))"
+            },
+            {
+                name: "UserBadges",
+                moduleFlag: "Messages.PROFILE_USER_BADGES",
+                regex: /(Messages\.PROFILE_USER_BADGES,role:"group",children:)(.+?\.key\)\}\)\))/,
+                replacement: "$1[ultimacord.platformIcons.render(e)].concat($2)"
+            }
+        ],
+
+        exposes: {
+            render: ({ user }: { user: any; }) => (<PlatformIndicator user={user} />),
         }
-    ],
-
-    exposes: {
-        render: ({ user }: { user: any; }) => (<PlatformIndicator user={user} />),
-    }
-};
-
-if (getExposed<Set<IPlugin>>('plugins')?.add(Plugin)) {
-    print("info", "Plugin pushed", Plugin.name);
+    };
 }
+

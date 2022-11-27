@@ -1,9 +1,12 @@
 import esbuild from "esbuild";
 
+import dotenv from 'dotenv';
+
 import {
     readdir,
     unlink,
     appendFile,
+    writeFile,
     mkdir
 } from "fs/promises";
 
@@ -11,9 +14,11 @@ import {
     dirname
 } from "path";
 
+dotenv.config();
+
 console.log("Building plugins...");
 
-const distPath = "src/plugins/dist/plugins.ts";
+const distPath = "src/plugins/dist/compiledPlugins.ts";
 
 readdir("src/plugins", {
     withFileTypes: true
@@ -35,7 +40,7 @@ readdir("src/plugins", {
     files.filter(dirent => dirent.isFile()).forEach(async (file) => {
         let result = await esbuild.build({
             bundle: true,
-            // minify: true,
+            minify: process.env.minify === "true" ? true : false,
             target: ['chrome80'],
             entryPoints: [`src/plugins/${file.name}`],
             write: false,
