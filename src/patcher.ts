@@ -13,6 +13,8 @@ export interface IPatch {
 }
 export const patches: Set<IPatch> = new Set();
 
+expose('plugins', plugins);
+
 async function InitPatcher() {
     print("info", 'Patcher initialized');
 

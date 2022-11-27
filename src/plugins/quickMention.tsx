@@ -1,9 +1,12 @@
 import React from 'react';
-
 import * as plugins from '../plugins';
+
 export class quickMention {
-    @plugins.definePlugin
-    static Plugin: plugins.IPlugin = {
+
+    @plugins.define
+    static _: plugins.IPlugin = {
+
+        name: 'quickMention',
         patches: [
             {
                 name: "serverListDecorators",

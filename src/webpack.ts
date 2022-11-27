@@ -28,7 +28,6 @@ export function getExposed<Type>(name: string) {
 }
 
 function findInternal(lambda: (module: any) => boolean) {
-
     for (const module of getModulesCache()) {
 
         if (!module?.exports)

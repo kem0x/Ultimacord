@@ -73,8 +73,9 @@ const PlatformIndicator = ({ user }: { user: any; }) => {
 
 
 export class platformIcons {
-    @plugins.definePlugin
-    static Plugin: plugins.IPlugin = {
+
+    @plugins.define
+    static _: plugins.IPlugin = {
         name: 'platformIcons',
         patches: [
             {

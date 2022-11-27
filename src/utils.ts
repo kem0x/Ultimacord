@@ -9,7 +9,6 @@ export function sleep(ms: number): Promise<void> {
 }
 
 export function waitFor(condition: () => boolean) {
-
     const poll = (resolve: Function) => {
         if (condition()) resolve();
         else setTimeout(_ => poll(resolve), 400);
@@ -19,9 +18,8 @@ export function waitFor(condition: () => boolean) {
 }
 
 export function whenDefined(object: any, prop: any, callback: () => void) {
-    if (object[prop]) {
-        callback();
-    } else {
+    if (object[prop]) callback();
+    else {
         Object.defineProperty(object, prop, {
             configurable: true,
             enumerable: true,

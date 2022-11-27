@@ -1,9 +1,9 @@
-import { expose, getExposed } from "./webpack";
+import { getExposed } from "./webpack";
 import { print } from "./utils";
 import { IPatch } from "./patcher";
 
 export interface IPlugin {
-    name?: string;
+    name: string;
     patches?: IPatch[];
     exposes?: { [key: string]: any };
     start?: () => void;
@@ -11,13 +11,7 @@ export interface IPlugin {
 }
 export const plugins: Set<IPlugin> = new Set();
 
-expose('plugins', plugins);
-
-export function definePlugin(target: any, propertyKey: string) {
-    console.log(typeof target, typeof propertyKey, typeof target[propertyKey]);
-
-    target[propertyKey].name = target.name;
-
+export function define(target: any, propertyKey: string) {
     if (getExposed<Set<IPlugin>>('plugins')?.add(target[propertyKey])) {
         print("info", "Plugin pushed", target[propertyKey]);
     }
