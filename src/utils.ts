@@ -11,7 +11,7 @@ export function sleep(ms: number): Promise<void> {
 export function waitFor(condition: () => boolean) {
     const poll = (resolve: Function) => {
         if (condition()) resolve();
-        else setTimeout(_ => poll(resolve), 400);
+        else setTimeout(_ => poll(resolve), 100);
     }
 
     return new Promise(poll);
