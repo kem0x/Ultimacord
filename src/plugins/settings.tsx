@@ -1,15 +1,8 @@
-import React from 'react';
-import { Forms, Common } from '../common';
+import { Common } from '../common';
 import * as plugins from '../plugins';
+import { Filters, Window } from '../webpack';
 
-const Sng = () => {
-    if (!Forms.FormSection) return null;
-
-    console.log(Forms.FormSection);
-
-    return <Forms.FormSection>
-    </Forms.FormSection>
-};
+let React: typeof import("react") = Common.React;
 
 export class settings {
 
@@ -17,32 +10,32 @@ export class settings {
     static _: plugins.IPlugin = {
 
         name: 'settings',
+        description: 'settings',
         patches: [
             {
-                name: "settings",
-                moduleFlag: "Messages.ACTIVITY_PRIVACY",
-                regex: /Messages\.SETTINGS_ADVANCED,element:.{1,3}\},/,
-                replacement: `$& 
-                {
-                    section: "DIVIDER"
-                }, 
-                {
-                    section: "HEADER",
-                    label: "Ultimacord"
-                },
-                { 
-                    section: "UltimacordSettings",
-                    label: "Settings",
-                    icon: ultimacord.settings.Icon(),
-                    element: Ap
-                },`
+                filter: Filters.Regex(/Messages\.SETTINGS_ADVANCED,element:.{1,3}\},/),
+                after: (res: any, ..._args: any) => {
+                    const idx = res.findIndex((s: any) => s.section === "Advanced");
+
+                    res.splice(idx + 1, 0,
+                        {
+                            section: "DIVIDER"
+                        },
+                        {
+                            section: "HEADER",
+                            label: "Ultimacord"
+                        },
+                        {
+                            section: "UltimacordSettings",
+                            label: "Settings",
+                            icon: Window.ultimacord.settings.Icon
+                        });
+                }
             }
         ],
 
         exposes: {
-            Icon: () => <Common.Label text="Alpha" color="#40b461" />,
-
-            render: () => (<Sng />),
+            Icon: <Common.UI.Label text="Alpha" color="#40b461" />
         }
     };
 }

@@ -1,20 +1,16 @@
-import React from 'react';
-
 import { print, waitFor } from './utils';
 
-import { Window, expose, Find } from './webpack';
+import { Window, expose, Patch, Find, Filters } from './webpack';
 import { plugins } from './plugins';
 
 import * as compiledPlugins from "./plugins/dist/compiledPlugins";
-import { Common } from './common';
 
 export interface IPatch {
-    name?: string;
-    moduleFlag: string;
-    regex: RegExp;
-    replacement: string | Function;
+    filter: (module: any) => boolean;
+    replacement?: Function;
+    before?: Function;
+    after?: Function;
 }
-export const patches: Set<IPatch> = new Set();
 
 expose('plugins', plugins);
 
@@ -38,9 +34,9 @@ async function InitPatcher() {
 
             if (plugin.patches) {
                 for (const patch of plugin.patches) {
-
-                    // print("log", "Loading patch", patch.name ? patch.name : patch.moduleFlag);
-                    patches.add(patch);
+                    if (patch.filter) {
+                        Patch(patch.filter, patch);
+                    }
                 }
             }
         }
@@ -74,10 +70,13 @@ export function UltimateDiscordExperience() {
             }
         }
 
-        // await InitPatcher();
+        await waitFor(() => Find(Filters.Code("dispatch", "subscribe")));
 
-        expose('find', Find);
-        expose('test', <Common.Label text="Alpha" color="#40b461" />);
+        await InitPatcher();
+
+        expose('Find', Find);
+        expose('Filters', Filters);
+        expose('Patch', Patch);
     });
 }
 

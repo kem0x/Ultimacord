@@ -1,13 +1,13 @@
-import React from 'react';
-
 import { Lazy } from '../utils';
-import { Find } from '../webpack';
-import { Stores, Common } from '../common';
+import { Find, Filters } from '../webpack';
+import { Common } from '../common';
 import * as plugins from '../plugins';
+
+let React: typeof import("react") = Common.React;
 
 function Icon(path: string, viewBox = "0 0 24 24") {
     return ({ color, tooltip }: { color: string; tooltip: string; }) => (
-        <Common.Tooltip text={tooltip} >
+        <Common.UI.Tooltip text={tooltip} >
             {(tooltipProps: any) => (
                 <svg
                     {...tooltipProps}
@@ -19,7 +19,7 @@ function Icon(path: string, viewBox = "0 0 24 24") {
                     <path d={path} />
                 </svg>
             )}
-        </Common.Tooltip>
+        </Common.UI.Tooltip>
     );
 
 }
@@ -32,7 +32,7 @@ const Icons = {
 };
 type Platform = keyof typeof Icons;
 
-const getStatusColor = Lazy(() => Find.ByCode("STATUS_YELLOW", "TWITCH", "STATUS_GREY"));
+const getStatusColor = Lazy(() => Find(Filters.Code("STATUS_YELLOW", "TWITCH", "STATUS_GREY")));
 
 const PlatformIcon = ({ platform, status }: { platform: Platform, status: string; }) => {
     const tooltip = platform[0].toUpperCase() + platform.slice(1);
@@ -42,11 +42,9 @@ const PlatformIcon = ({ platform, status }: { platform: Platform, status: string
 };
 
 const PlatformIndicator = ({ user }: { user: any; }) => {
-    if (!Common.Tooltip) return null;
-
     if (!user || user.bot) return null;
 
-    const status = Stores.PresenceStore.getState()?.clientStatuses?.[user.id] as Record<Platform, string>;
+    const status = Common.Stores.PresenceStore.getState()?.clientStatuses?.[user.id] as Record<Platform, string>;
     if (!status) return null;
 
     const icons = Object.entries(status).map(([platform, status]) => (
@@ -71,36 +69,46 @@ const PlatformIndicator = ({ user }: { user: any; }) => {
     );
 };
 
+let patched: boolean = false;
 
 export class platformIcons {
 
     @plugins.define
     static _: plugins.IPlugin = {
         name: 'platformIcons',
+        description: '',
         patches: [
-            {
+            /*{
                 name: "serverListDecorators",
                 moduleFlag: "this.renderPremium()",
                 regex: /this.renderPremium\(\)[^\]]*?\]/,
                 replacement: "$&.concat(ultimacord.platformIcons.render(this.props))"
+            },*/
+            {
+                filter: m => m.type?.toString().includes("canUseAvatarDecorations"),
+                after: (res: any, ..._args: any) => {
+
+                    if (!patched && res.type.prototype.renderDecorators) {
+                        patched = true;
+
+                        const renderDecorators = res.type.prototype.renderDecorators;
+                        res.type.prototype.renderDecorators = function () {
+                            const decorators = renderDecorators.call(this);
+                            return [decorators, <PlatformIndicator key="platforms" user={this.props.user} />];
+                        };
+                    }
+                }
             },
             {
-                name: "DMListDecorators",
-                moduleFlag: "PrivateChannel.renderAvatar",
-                regex: /(subText:(.{1,3})\..+?decorators:)(.+?:null)/,
-                replacement: "$1[$3].concat(ultimacord.platformIcons.render($2.props))"
-            },
-            {
-                name: "UserBadges",
-                moduleFlag: "Messages.PROFILE_USER_BADGES",
-                regex: /(Messages\.PROFILE_USER_BADGES,role:"group",children:)(.+?\.key\)\}\)\))/,
-                replacement: "$1[ultimacord.platformIcons.render(e)].concat($2)"
+                filter: Filters.Regex(/Messages\.PROFILE_USER_BADGES/),
+                after: (res: any, ..._args: any) => {
+                    const user = _args[0]?.user;
+                    if (!user) return res;
+
+                    res.props.children.unshift(<PlatformIndicator user={user} />);
+                }
             }
         ],
-
-        exposes: {
-            render: ({ user }: { user: any; }) => (<PlatformIndicator user={user} />),
-        }
     };
 }
 

@@ -1,4 +1,5 @@
-import { isOfType, isOfTypeT } from './utils';
+import { IPatch } from './patcher';
+import { isOfType, isOfTypeT, print } from './utils';
 
 // i had to give up the live server support
 export const Window = (unsafeWindow as any);
@@ -14,13 +15,7 @@ export function getExposed<Type>(name: string) {
     return (Window.ultimacord[name] as Type);
 }
 
-interface IPatch {
-    replacement?: Function;
-    before?: Function;
-    after?: Function;
-}
-
-function findInternal(lambda: (module: any) => boolean) {
+export function Find(lambda: (module: any) => boolean) {
     let cache: any;
     Window.webpackChunkdiscord_app.push([[Symbol("Ultimacord")], {}, (m: any) => cache = Object.values(m.c)]);
     Window.webpackChunkdiscord_app.pop();
@@ -49,10 +44,10 @@ function findInternal(lambda: (module: any) => boolean) {
     return null;
 }
 
-function patchInternal(lambda: (module: any) => boolean, patch: IPatch) {
+export function Patch(lambda: (module: any) => boolean, patch: IPatch) {
 
     if (!patch.replacement && !patch.before && !patch.after)
-        throw new Error("Patch must have a replacement, before or after function");
+        print("warn", "Patch must have a replacement, before or after function, nothing is going to be patched.");
 
     let cache: any;
     Window.webpackChunkdiscord_app.push([[Symbol("Ultimacord")], {}, (m: any) => cache = Object.values(m.c)]);
@@ -67,22 +62,22 @@ function patchInternal(lambda: (module: any) => boolean, patch: IPatch) {
             continue;
 
         for (let nestedModule in cache[module].exports) {
-            if (cache[module].exports[nestedModule] && lambda(cache[module].exports[nestedModule])) {
-
-                if (!isOfType(cache[module].exports[nestedModule], "function"))
-                    throw new Error("Patch target is not a function");
-
-                console.log("Found function!");
+            if (
+                cache[module].exports[nestedModule] &&
+                (lambda(cache[module].exports[nestedModule]))
+            ) {
 
                 if (patch.replacement) {
-                    console.log("Patching with replacement");
                     cache[module].exports[nestedModule] = patch.replacement;
                 }
 
-                const original = cache[module].exports[nestedModule];
+                const isTypeFunction = isOfTypeT<Object>(cache[module].exports[nestedModule]) && isOfType(cache[module].exports[nestedModule]?.type, "function");
+
+                if (isTypeFunction) print("info", "Your filter " + lambda + " seems to match a type function, is that correct?");
+
+                const original: any = isTypeFunction ? cache[module].exports[nestedModule].type : cache[module].exports[nestedModule];
 
                 if (patch.before) {
-                    console.log("Patching with before");
                     cache[module].exports[nestedModule] = function (...args: any[]) {
                         if (patch.before) {
                             patch.before(...args);
@@ -93,7 +88,6 @@ function patchInternal(lambda: (module: any) => boolean, patch: IPatch) {
                 }
 
                 if (patch.after) {
-                    console.log("Patching with after");
                     cache[module].exports[nestedModule] = function (...args: any[]) {
                         const result = original(...args);
 
@@ -113,32 +107,14 @@ function patchInternal(lambda: (module: any) => boolean, patch: IPatch) {
     return false;
 }
 
-export const Find = {
-    ByProps: (...props: string[]) => {
-        return findInternal(module => props.every(prop => module[prop] !== undefined));
-    },
+export const Filters = {
+    Props: (...props: string[]) => (module: any) => props.every(prop => module[prop] !== undefined),
 
-    ByDisplayName: (name: string) => {
-        return findInternal(module => module.default.displayName === name);
-    },
+    DisplayName: (name: string) => (module: any) => module.default.displayName === name,
 
-    ByCode: (...code: string[]) => {
-        return findInternal(module => isOfType(module, "function") && code.every(c => (module as Function).toString().includes(c)));
-    },
+    Prototypes: (...prototypes: string[]) => (module: any) => prototypes.every(prototype => module.prototype[prototype] !== undefined),
 
-    ByPrototypes: (...prototypes: string[]) => {
-        return findInternal(module => prototypes.every(prototype => module.prototype[prototype] !== undefined));
-    },
+    Code: (...code: string[]) => (module: any) => isOfType(module, "function") && code.every(c => (module as Function).toString().includes(c)),
 
-    ByLambda: (lambda: (module: any) => boolean) => {
-        return findInternal(lambda);
-    },
-
-    ByRegex: (regex: RegExp) => {
-        return findInternal(module => isOfType(module, "function") && regex.test((module as Function).toString()));
-    },
-
-    Debug: (regex: RegExp, patch: IPatch) => {
-        return patchInternal(module => isOfType(module, "function") && regex.test((module as Function).toString()), patch);
-    },
+    Regex: (regex: RegExp) => (module: any) => isOfType(module, "function") && regex.test((module as Function).toString())
 }
