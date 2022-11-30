@@ -34,9 +34,7 @@ async function InitPatcher() {
 
             if (plugin.patches) {
                 for (const patch of plugin.patches) {
-                    if (patch.filter) {
-                        Patch(patch.filter, patch);
-                    }
+                    Patch(patch);
                 }
             }
         }
@@ -56,17 +54,17 @@ export function UltimateDiscordExperience() {
         Window.webpackChunkdiscord_app.push([[Symbol("Ultimacord")], {}, (m: any) => wreq = m]);
         Window.webpackChunkdiscord_app.pop();
 
-        wreq.d = (e: any, c: any) => {
-            for (var d in c) {
-                wreq.o(c, d) && !wreq.o(e, d) && Object.defineProperty(e, d, {
+        wreq.d = (exports: any, getters: any) => {
+            for (const key in getters) {
+                Object.defineProperty(exports, key, {
+                    get: getters[key],
+                    set: (v) => {
+                        delete exports[key];
+                        exports[key] = v;
+                    },
                     enumerable: true,
                     configurable: true,
-                    get: c[d],
-                    set: (v) => {
-                        delete e[d];
-                        e[d] = v;
-                    }
-                })
+                });
             }
         }
 

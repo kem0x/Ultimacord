@@ -14,7 +14,7 @@ export class settings {
         patches: [
             {
                 filter: Filters.Regex(/Messages\.SETTINGS_ADVANCED,element:.{1,3}\},/),
-                after: (res: any, ..._args: any) => {
+                after: function (res: any, ..._args: any) {
                     const idx = res.findIndex((s: any) => s.section === "Advanced");
 
                     res.splice(idx + 1, 0,

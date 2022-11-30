@@ -1,3 +1,4 @@
+import { Hook } from './hook';
 import { IPatch } from './patcher';
 import { isOfType, isOfTypeT, print } from './utils';
 
@@ -44,7 +45,7 @@ export function Find(lambda: (module: any) => boolean) {
     return null;
 }
 
-export function Patch(lambda: (module: any) => boolean, patch: IPatch) {
+export function Patch(patch: IPatch) {
 
     if (!patch.replacement && !patch.before && !patch.after)
         print("warn", "Patch must have a replacement, before or after function, nothing is going to be patched.");
@@ -64,7 +65,7 @@ export function Patch(lambda: (module: any) => boolean, patch: IPatch) {
         for (let nestedModule in cache[module].exports) {
             if (
                 cache[module].exports[nestedModule] &&
-                (lambda(cache[module].exports[nestedModule]))
+                (patch.filter(cache[module].exports[nestedModule]))
             ) {
 
                 if (patch.replacement) {
@@ -73,30 +74,22 @@ export function Patch(lambda: (module: any) => boolean, patch: IPatch) {
 
                 const isTypeFunction = isOfTypeT<Object>(cache[module].exports[nestedModule]) && isOfType(cache[module].exports[nestedModule]?.type, "function");
 
-                if (isTypeFunction) print("info", "Your filter " + lambda + " seems to match a type function, is that correct?");
+                if (isTypeFunction) print("info", "Your filter " + patch.filter + " seems to match a type function, is that correct?");
 
-                const original: any = isTypeFunction ? cache[module].exports[nestedModule].type : cache[module].exports[nestedModule];
+                // console.log(original);
 
                 if (patch.before) {
-                    cache[module].exports[nestedModule] = function (...args: any[]) {
-                        if (patch.before) {
-                            patch.before(...args);
-                        }
-
-                        return original(...args);
-                    }
+                    Hook.Before(
+                        (isTypeFunction ? cache[module].exports[nestedModule] : cache[module].exports),
+                        (isTypeFunction ? "type" : nestedModule),
+                        patch.before);
                 }
 
                 if (patch.after) {
-                    cache[module].exports[nestedModule] = function (...args: any[]) {
-                        const result = original(...args);
-
-                        if (patch.after) {
-                            patch.after(result, ...args);
-                        }
-
-                        return result;
-                    }
+                    Hook.After(
+                        (isTypeFunction ? cache[module].exports[nestedModule] : cache[module].exports),
+                        (isTypeFunction ? "type" : nestedModule),
+                        patch.after);
                 }
 
                 return true;

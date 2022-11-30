@@ -2,6 +2,7 @@ import { Lazy } from '../utils';
 import { Find, Filters } from '../webpack';
 import { Common } from '../common';
 import * as plugins from '../plugins';
+import { Hook } from '../hook';
 
 let React: typeof import("react") = Common.React;
 
@@ -69,8 +70,6 @@ const PlatformIndicator = ({ user }: { user: any; }) => {
     );
 };
 
-let patched: boolean = false;
-
 export class platformIcons {
 
     @plugins.define
@@ -78,34 +77,66 @@ export class platformIcons {
         name: 'platformIcons',
         description: '',
         patches: [
-            /*{
-                name: "serverListDecorators",
-                moduleFlag: "this.renderPremium()",
-                regex: /this.renderPremium\(\)[^\]]*?\]/,
-                replacement: "$&.concat(ultimacord.platformIcons.render(this.props))"
-            },*/
             {
+                // Server list decorators
                 filter: m => m.type?.toString().includes("canUseAvatarDecorations"),
-                after: (res: any, ..._args: any) => {
+                after: function (member: any, ..._args: any) {
 
-                    if (!patched && res.type.prototype.renderDecorators) {
-                        patched = true;
+                    if (member.type.prototype.renderDecorators && !Hook.IsHooked(member.type.prototype.renderDecorators)) {
+                        Hook.After(member.type.prototype, "renderDecorators", function (this: any, decorators: any, ..._args: any) {
 
-                        const renderDecorators = res.type.prototype.renderDecorators;
-                        res.type.prototype.renderDecorators = function () {
-                            const decorators = renderDecorators.call(this);
-                            return [decorators, <PlatformIndicator key="platforms" user={this.props.user} />];
-                        };
+                            return [decorators, <PlatformIndicator user={this.props.user} />];
+                        });
                     }
+
+                    return member;
                 }
             },
             {
+                // DM list decorators
+                filter: Filters.Regex(/\[\"channel\",\"selected\"\]\),.{1,3}=\(0,.{1,3}\..{1,10}\)\(\[.{1,10}\],\(function\(\)\{return .{1,3}\..{1,3}\.isChannelMuted/),
+                after: function (dm: any, ..._args: any) {
+
+                    if (dm.type.prototype.render && !Hook.IsHooked(dm.type.prototype.render)) {
+
+                        Hook.After(dm.type.prototype, "render", function (this: any, element: any, ..._args: any) {
+
+                            const user = this?.props?.user;
+
+                            if (user && !user.bot) {
+                                if (element.props.children && !Hook.IsHooked(element.props.children)) {
+
+                                    Hook.After(element.props, "children", function (this: any, child: any, ..._args: any) {
+
+                                        if (child?.props?.children?.props?.children?.[0]?.props?.children?.props?.name) {
+
+                                            const decorators = child.props.children.props.children[0].props.children.props.decorators;
+
+                                            if (decorators && decorators?.push) {
+                                                decorators.push(<PlatformIndicator user={user} />);
+                                            } else {
+                                                child.props.children.props.children[0].props.children.props.decorators = [<PlatformIndicator user={user} />];
+                                            }
+                                        }
+
+                                        return child;
+                                    });
+                                }
+                            }
+
+                            return element
+                        });
+                    }
+                },
+            },
+            {
+                // User popout
                 filter: Filters.Regex(/Messages\.PROFILE_USER_BADGES/),
-                after: (res: any, ..._args: any) => {
+                after: function (res: any, ..._args: any) {
                     const user = _args[0]?.user;
                     if (!user) return res;
 
-                    res.props.children.unshift(<PlatformIndicator user={user} />);
+                    /* badges */ res.props.children.unshift(<PlatformIndicator user={user} />);
                 }
             }
         ],
