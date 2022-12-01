@@ -4,6 +4,9 @@ import { Filters, Window } from '../webpack';
 
 let React: typeof import("react") = Common.React;
 
+import { default as SettingsUI } from '../settingsUI';
+
+const Test = () => <SettingsUI />;
 export class settings {
 
     @plugins.define
@@ -28,8 +31,11 @@ export class settings {
                         {
                             section: "UltimacordSettings",
                             label: "Settings",
-                            icon: Window.ultimacord.settings.Icon
+                            icon: Window.ultimacord.settings.Icon,
+                            element: Test
                         });
+
+                    return res;
                 }
             }
         ],

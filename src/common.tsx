@@ -2,6 +2,19 @@ import { Filters, Find } from './webpack';
 import type Components from "discord-types/components";
 import type Other from "discord-types/other";
 
+export type TextVariant = "heading-sm/normal" | "heading-sm/medium" | "heading-sm/bold" | "heading-md/normal" | "heading-md/medium" | "heading-md/bold" | "heading-lg/normal" | "heading-lg/medium" | "heading-lg/bold" | "heading-xl/normal" | "heading-xl/medium" | "heading-xl/bold" | "heading-xxl/normal" | "heading-xxl/medium" | "heading-xxl/bold" | "eyebrow" | "heading-deprecated-14/normal" | "heading-deprecated-14/medium" | "heading-deprecated-14/bold" | "text-xxs/normal" | "text-xxs/medium" | "text-xxs/semibold" | "text-xxs/bold" | "text-xs/normal" | "text-xs/medium" | "text-xs/semibold" | "text-xs/bold" | "text-sm/normal" | "text-sm/medium" | "text-sm/semibold" | "text-sm/bold" | "text-md/normal" | "text-md/medium" | "text-md/semibold" | "text-md/bold" | "text-lg/normal" | "text-lg/medium" | "text-lg/semibold" | "text-lg/bold" | "display-sm" | "display-md" | "display-lg" | "code";
+
+export type TextProps = React.PropsWithChildren & {
+    variant: TextVariant;
+    style?: React.CSSProperties;
+    color?: string;
+    tag?: "div" | "span" | "p" | "strong" | `h${1 | 2 | 3 | 4 | 5 | 6}`;
+    selectable?: boolean;
+    lineClamp?: number;
+    id?: string;
+    className?: string;
+};
+
 let React: typeof import("react");
 
 let FluxDispatcher: Other.FluxDispatcher;
@@ -37,6 +50,10 @@ let Label = ({ color, text }: { color?: string, text: string; }) => {
     </div>
 };
 
+let Text: (props: TextProps) => JSX.Element;
+
+let Margins: any;
+
 let PresenceStore: any;
 
 export let Common =
@@ -47,11 +64,18 @@ export let Common =
 
     UI:
     {
+        get Margins() { return Margins ?? (Margins = Find(Filters.Props("marginTop20"))); },
+
         get Tooltip() { return Tooltip ?? (Tooltip = Find(Filters.Props("Positions", "Colors"))); },
 
-        get FormSection() { return FormSection ?? (FormSection = Find(Filters.Code("titleClassName", "sectionTitle"))); },
-
         get Label() { return Label },
+
+        get Text() { return Text ?? (Text = Find(Filters.Props("Positions", "Colors"))); }
+    },
+
+    Form:
+    {
+        get FormSection() { return FormSection ?? (FormSection = Find(Filters.Code("titleClassName", "sectionTitle"))); },
     },
 
     Stores:
