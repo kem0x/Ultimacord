@@ -3,14 +3,13 @@ let React: typeof import("react") = Common.React;
 
 function SettingsUI() {
     return (
-        <div>
-            <h1>Settings</h1>
-        </div>
-        /*<Common.Form.FormSection>
-            <Common.UI.Text variant="heading-md/normal" tag="h2" className={Common.UI.Margins.marginBottom8}>
-                Patch Helper
-            </Common.UI.Text>
-        </Common.Form.FormSection>*/
+        <Common.Forms.FormSection>
+
+            <Common.UI.Text variant="heading-lg/bold" tag="h2" className={Common.UI.Margins.marginBottom20}>Ultimacord</Common.UI.Text>
+
+            <Common.UI.Switch>Test</Common.UI.Switch>
+
+        </Common.Forms.FormSection>
     )
 }
 

@@ -65,7 +65,7 @@ export function Patch(patch: IPatch) {
         for (let nestedModule in cache[module].exports) {
             if (
                 cache[module].exports[nestedModule] &&
-                (patch.filter(cache[module].exports[nestedModule]))
+                patch.filter(cache[module].exports[nestedModule])
             ) {
 
                 if (patch.replacement) {
@@ -74,7 +74,7 @@ export function Patch(patch: IPatch) {
 
                 const isTypeFunction = isOfTypeT<Object>(cache[module].exports[nestedModule]) && isOfType(cache[module].exports[nestedModule]?.type, "function");
 
-                if (isTypeFunction) print("info", "Your filter " + patch.filter + " seems to match a type function, is that correct?");
+                if (isTypeFunction) print("warn", "Your filter " + patch.filter + " seems to match a type function, is that correct?");
 
                 // console.log(original);
 
@@ -109,5 +109,7 @@ export const Filters = {
 
     Code: (...code: string[]) => (module: any) => isOfType(module, "function") && code.every(c => (module as Function).toString().includes(c)),
 
-    Regex: (regex: RegExp) => (module: any) => isOfType(module, "function") && regex.test((module as Function).toString())
+    Regex: (regex: RegExp) => (module: any) => isOfType(module, "function") && regex.test((module as Function).toString()),
+
+    ReactType: (...code: string[]) => (module: any) => code.every(c => module.type?.toString().includes(c)),
 }

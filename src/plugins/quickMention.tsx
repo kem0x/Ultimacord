@@ -26,15 +26,16 @@ export class quickMention {
 
         name: 'quickMention',
         description: 'Adds a quick mention button to the message actions bar',
-        patches: [
+
+        start() {
             /*{
-                filter: m => m.type?.toString().includes(`["channel","showingSpamBanner","showingQuarantineBanner","forceCompact"]`),
-                after: function (res: any, ..._args: any) {
-                    // console.log(res);
-                    //.props.children.type.type
-                }
-            }*/
-        ],
+    filter: m => m.type?.toString().includes(`["channel","showingSpamBanner","showingQuarantineBanner","forceCompact"]`),
+    after: function (res: any, ..._args: any) {
+        // console.log(res);
+        //.props.children.type.type
+    }
+}*/
+        },
 
         exposes: {
             Icon: () => (

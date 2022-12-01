@@ -1,11 +1,9 @@
 import { getExposed } from './webpack';
 import { print } from "./utils";
-import { IPatch } from "./patcher";
 
 export interface IPlugin {
     name: string;
     description: string;
-    patches?: IPatch[];
     exposes?: { [key: string]: any };
     start?: () => void;
     stop?: () => void;

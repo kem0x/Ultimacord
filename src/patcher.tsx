@@ -14,7 +14,6 @@ export interface IPatch {
 
 expose('plugins', plugins);
 
-// @ts-ignore
 async function InitPatcher() {
     print("info", 'Patcher initialized');
 
@@ -30,12 +29,6 @@ async function InitPatcher() {
 
             if (plugin.exposes) {
                 expose(plugin.name, plugin.exposes);
-            }
-
-            if (plugin.patches) {
-                for (const patch of plugin.patches) {
-                    Patch(patch);
-                }
             }
         }
 

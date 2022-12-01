@@ -21,7 +21,12 @@ let FluxDispatcher: Other.FluxDispatcher;
 
 let Tooltip: Components.Tooltip;
 
-let FormSection: any;
+export const Forms = {} as {
+    FormTitle: Components.FormTitle;
+    FormSection: any;
+    FormDivider: any;
+    FormText: Components.FormText;
+};
 
 let Label = ({ color, text }: { color?: string, text: string; }) => {
     return <div style={{
@@ -52,6 +57,10 @@ let Label = ({ color, text }: { color?: string, text: string; }) => {
 
 let Text: (props: TextProps) => JSX.Element;
 
+let Button: any;
+
+let Switch: any;
+
 let Margins: any;
 
 let PresenceStore: any;
@@ -70,12 +79,20 @@ export let Common =
 
         get Label() { return Label },
 
-        get Text() { return Text ?? (Text = Find(Filters.Props("Positions", "Colors"))); }
+        get Text() { return Text ?? (Text = Find(Filters.Code("data-text-variant", "always-white"))); },
+
+        get Button() { return Button ?? (Button = Find(Filters.Props("Hovers", "Looks", "Sizes"))); },
+
+        get Switch() { return Switch ?? (Switch = Find(Filters.Code("helpdeskArticleId"))); },
     },
 
-    Form:
+    Forms:
     {
-        get FormSection() { return FormSection ?? (FormSection = Find(Filters.Code("titleClassName", "sectionTitle"))); },
+        get FormSection() { return Forms.FormSection ?? (Forms.FormSection = Find(Filters.Code("titleClassName", "sectionTitle"))); },
+
+        get FormTitle() { return Forms.FormTitle ?? (Forms.FormTitle = Find(Filters.Code("errorSeparator"))); },
+
+        get FormText() { return Forms.FormText ?? (Forms.FormText = Find(m => m.Types?.INPUT_PLACEHOLDER)); },
     },
 
     Stores:

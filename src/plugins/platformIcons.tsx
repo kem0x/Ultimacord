@@ -1,5 +1,5 @@
 import { Lazy } from '../utils';
-import { Find, Filters } from '../webpack';
+import { Find, Filters, Patch } from '../webpack';
 import { Common } from '../common';
 import * as plugins from '../plugins';
 import { Hook } from '../hook';
@@ -76,10 +76,12 @@ export class platformIcons {
     static _: plugins.IPlugin = {
         name: 'platformIcons',
         description: '',
-        patches: [
-            {
+
+        start() {
+
+            Patch({
                 // Server list decorators
-                filter: m => m.type?.toString().includes("canUseAvatarDecorations"),
+                filter: Filters.ReactType("canUseAvatarDecorations"),
                 after: function (member: any, ..._args: any) {
 
                     if (member.type.prototype.renderDecorators && !Hook.IsHooked(member.type.prototype.renderDecorators)) {
@@ -91,8 +93,9 @@ export class platformIcons {
 
                     return member;
                 }
-            },
-            {
+            });
+
+            Patch({
                 // DM list decorators
                 filter: Filters.Regex(/\[\"channel\",\"selected\"\]\),.{1,3}=\(0,.{1,3}\..{1,10}\)\(\[.{1,10}\],\(function\(\)\{return .{1,3}\..{1,3}\.isChannelMuted/),
                 after: function (dm: any, ..._args: any) {
@@ -128,8 +131,9 @@ export class platformIcons {
                         });
                     }
                 },
-            },
-            {
+            });
+
+            Patch({
                 // User popout
                 filter: Filters.Regex(/Messages\.PROFILE_USER_BADGES/),
                 after: function (res: any, ..._args: any) {
@@ -137,9 +141,11 @@ export class platformIcons {
                     if (!user) return res;
 
                     /* badges */ res.props.children.unshift(<PlatformIndicator user={user} />);
+
+                    return res;
                 }
-            }
-        ],
+            });
+        }
     };
 }
 
